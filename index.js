@@ -59,12 +59,43 @@ async function run() {
 
         // documents create
         const studentCollection = client.db("uiu_ms_database").collection("studentData");
+        const facultyCollection = client.db("uiu_ms_database").collection("facultyData");
+        const staffCollection = client.db("uiu_ms_database").collection("staffData");
 
 
         app.post('/studentData', verifyJWT, async (req, res) => {
             const user = req.body;
-            console.log(user);
+            const query = { email: user.email };
+            const find = await studentCollection.findOne(query);
+            if (find) {
+                return res.send({ error: true })
+            }
+
             const result = await studentCollection.insertOne(user);
+            res.send(result);
+        })
+
+        app.post("/facultyData", verifyJWT, async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const find = await facultyCollection.findOne(query);
+            if (find) {
+                return res.send({ error: true })
+            }
+
+            const result = await facultyCollection.insertOne(user);
+            res.send(result);
+        })
+    
+        app.post("/staffData", verifyJWT, async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const find = await staffCollection.findOne(query);
+            if (find) {
+                return res.send({ error: true })
+            }
+
+            const result = await staffCollection.insertOne(user);
             res.send(result);
         })
 
