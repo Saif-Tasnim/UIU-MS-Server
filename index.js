@@ -56,8 +56,17 @@ async function run() {
         await client.connect();
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
+        // documents create
+        const studentCollection = client.db("uiu_ms_database").collection("studentData");
+
+
+        app.post('/studentData', verifyJWT, async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await studentCollection.insertOne(user);
+            res.send(result);
+        })
 
 
         // jwt token
@@ -68,6 +77,8 @@ async function run() {
             res.send({ token })
 
         })
+
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
