@@ -62,6 +62,12 @@ async function run() {
         const facultyCollection = client.db("uiu_ms_database").collection("facultyData");
         const staffCollection = client.db("uiu_ms_database").collection("staffData");
 
+        //    student documents
+        app.get("/students", verifyJWT, async (req, res) => {
+            const query  = { status: { $ne: 'Alumni' } };
+            const result = await studentCollection.find(query).toArray()
+            res.send(result);
+        })
 
         app.post('/studentData', verifyJWT, async (req, res) => {
             const user = req.body;
@@ -86,7 +92,7 @@ async function run() {
             const result = await facultyCollection.insertOne(user);
             res.send(result);
         })
-    
+
         app.post("/staffData", verifyJWT, async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
