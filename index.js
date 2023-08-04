@@ -62,10 +62,17 @@ async function run() {
         const facultyCollection = client.db("uiu_ms_database").collection("facultyData");
         const staffCollection = client.db("uiu_ms_database").collection("staffData");
 
-        //    student documents
+        // student documents
         app.get("/students", verifyJWT, async (req, res) => {
-            const query  = { status: { $ne: 'Alumni' } };
+            const query = { status: { $ne: 'Alumni' } };
             const result = await studentCollection.find(query).toArray()
+            res.send(result);
+        })
+
+        app.get("/students/:email", verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await studentCollection.findOne(query)
             res.send(result);
         })
 
@@ -81,6 +88,19 @@ async function run() {
             res.send(result);
         })
 
+        // faculty documents
+        app.get('/faculty', verifyJWT, async (req, res) => {
+            const result = await facultyCollection.find().toArray()
+            res.send(result);
+        })
+
+        app.get('/faculty/:email', verifyJWT, async(req,res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await facultyCollection.findOne(query);
+            res.send(result);
+        })
+
         app.post("/facultyData", verifyJWT, async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
@@ -90,6 +110,21 @@ async function run() {
             }
 
             const result = await facultyCollection.insertOne(user);
+            res.send(result);
+        })
+
+
+        // staff documents
+
+        app.get('/staff', verifyJWT, async (req, res) => {
+            const result = await staffCollection.find().toArray()
+            res.send(result);
+        })
+
+        app.get('/staff/:email', verifyJWT, async(req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await staffCollection.findOne(query)
             res.send(result);
         })
 
