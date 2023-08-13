@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
@@ -61,10 +61,17 @@ async function run() {
         const studentCollection = client.db("uiu_ms_database").collection("studentData");
         const facultyCollection = client.db("uiu_ms_database").collection("facultyData");
         const staffCollection = client.db("uiu_ms_database").collection("staffData");
+        const courseCollection = client.db("uiu_ms_database").collection("courses");
+
+        const dummyCollection = client.db("uiu_ms_database").collection("dummyClass");
+
+        const counsellingData = client.db("uiu_ms_database").collection("counsellingData");
+
 
         // student documents
         app.get("/students", verifyJWT, async (req, res) => {
-            const query = { status: { $ne: 'Alumni' } };
+            // const query = { role: { $ne: 'Alumni' } };
+            const query = { role: "student" };
             const result = await studentCollection.find(query).toArray()
             res.send(result);
         })
@@ -88,13 +95,54 @@ async function run() {
             res.send(result);
         })
 
+        app.patch('/updateAlumni/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    role: "Alumni"
+                },
+            };
+
+            const result = await studentCollection.updateOne(query, updateDoc);
+            res.send(result);
+        })
+
+        app.put('/updateInfo/:id', verifyJWT, async (req, res) => {
+            const { firstName, lastName, email, phone, gender, department } = req.body;
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    phone: phone,
+                    gender: gender,
+                    department: department
+                },
+            };
+
+            const result = await studentCollection.updateOne(query, updateDoc);
+            res.send(result);
+        })
+
+        app.delete('/deleteStudent/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await studentCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // faculty documents
         app.get('/faculty', verifyJWT, async (req, res) => {
             const result = await facultyCollection.find().toArray()
             res.send(result);
         })
 
-        app.get('/faculty/:email', verifyJWT, async(req,res) => {
+        app.get('/faculty/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const result = await facultyCollection.findOne(query);
@@ -113,6 +161,13 @@ async function run() {
             res.send(result);
         })
 
+        // deleteFaculty
+        app.delete('/deleteFaculty/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await facultyCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // staff documents
 
@@ -121,7 +176,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/staff/:email', verifyJWT, async(req, res) => {
+        app.get('/staff/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const result = await staffCollection.findOne(query)
@@ -140,6 +195,36 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/assignCourse', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const query = { courseCode: data.courseCode, section: data.section }
+            const find = await courseCollection.findOne(query);
+            if (find) {
+                return res.send({ message: "already exists" })
+            }
+
+            const result = await courseCollection.insertOne(data);
+            res.send(result);
+        })
+
+
+        // dummy site link
+
+        app.get('/myclass', async (req, res) => {
+            const result = await dummyCollection.findOne();
+            res.send(result);
+        })
+
+        app.get("/counseling", verifyJWT, async (req, res) => {
+            const result = await counsellingData.findOne();
+            res.send(result);
+        })
+
+        app.post('/counseling', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await counsellingData.insertOne(data);
+            res.send(result);
+        })
 
         // jwt token
 
