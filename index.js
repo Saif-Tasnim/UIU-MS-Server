@@ -325,6 +325,22 @@ async function run() {
             res.send(result);
         })
 
+        app.patch('/updateAvailable/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const { status } = req.body;
+            const query = { email: email };
+
+            const updateDoc = {
+                $set: {
+                    status: status
+                },
+            };
+
+            const result = await facultyCollection.updateOne(query, updateDoc);
+            res.send(result);
+
+        })
+
         // dummy site link
 
         // app.get('/myclass', async (req, res) => {
