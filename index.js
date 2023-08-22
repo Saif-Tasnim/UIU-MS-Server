@@ -62,10 +62,13 @@ async function run() {
         const facultyCollection = client.db("uiu_ms_database").collection("facultyData");
         const staffCollection = client.db("uiu_ms_database").collection("staffData");
         const courseCollection = client.db("uiu_ms_database").collection("courses");
+        const enrollCollection = client.db("uiu_ms_database").collection("enroll");
+        const counsellingCollection = client.db("uiu_ms_database").collection("counselling");
+        const bookingCollection = client.db("uiu_ms_database").collection("booking");
 
-        const dummyCollection = client.db("uiu_ms_database").collection("dummyClass");
+        // const dummyCollection = client.db("uiu_ms_database").collection("dummyClass");
 
-        const counsellingData = client.db("uiu_ms_database").collection("counsellingData");
+        // const counsellingData = client.db("uiu_ms_database").collection("counsellingData");
 
 
         // student documents
@@ -207,24 +210,138 @@ async function run() {
             res.send(result);
         })
 
+        // faculty dashboard
+        app.get('/getCourse/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = { faculty: name };
+            const result = await courseCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //student dashboard
+        app.get('/courseList/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                $or: [
+                    { courseCode: id },
+                    { courseTitle: id }
+                ]
+            };
+
+            const result = await courseCollection.find(query).sort({ section: 1 }).toArray();
+            res.send(result);
+        })
+
+        app.get('/enrollCourse/:email', async (req, res) => {
+            const data = req.params.email;
+            const query = { email: data };
+            const result = await enrollCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/enrollCourse', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await enrollCollection.insertOne(data);
+            res.send(result);
+        })
+
+        //counseling student in
+        app.get('/counsellingSchedule/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = { fullName: name };
+            const result = await counsellingCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get('/booking', verifyJWT, async (req, res) => {
+            const name = req.query.faculty;
+            const time = req.query.time;
+            // console.log(name, time);
+            const query = { faculty: name, selectedDate: time, status: { $ne: 'pending' } };
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get('/counselingData/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/booking', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await bookingCollection.insertOne(data);
+            res.send(result);
+        })
+
+
+        //faculty in
+        app.get('/counsellingScheduleFaculty/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await counsellingCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/counsellingSchedule', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await counsellingCollection.insertOne(data);
+            res.send(result);
+        })
+
+        app.patch('/counseling/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    status: 'accepted'
+                },
+            };
+            const result = await bookingCollection.updateOne(query, updateDoc);
+            res.send(result);
+        })
+
+        app.put('/updateCounseling/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const { feedback } = req.body;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    feedback,
+                    status: 'rejected'
+                },
+            };
+
+            const result = await bookingCollection.updateOne(query, updateDoc, options);
+            res.send(result)
+        })
+
+        app.get('/bookingData/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = { faculty: name };
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
 
         // dummy site link
 
-        app.get('/myclass', async (req, res) => {
-            const result = await dummyCollection.findOne();
-            res.send(result);
-        })
+        // app.get('/myclass', async (req, res) => {
+        //     const result = await dummyCollection.findOne();
+        //     res.send(result);
+        // })
 
-        app.get("/counseling", verifyJWT, async (req, res) => {
-            const result = await counsellingData.findOne();
-            res.send(result);
-        })
+        // app.get("/counseling", verifyJWT, async (req, res) => {
+        //     const result = await counsellingData.findOne();
+        //     res.send(result);
+        // })
 
-        app.post('/counseling', verifyJWT, async (req, res) => {
-            const data = req.body;
-            const result = await counsellingData.insertOne(data);
-            res.send(result);
-        })
+        // app.post('/counseling', verifyJWT, async (req, res) => {
+        //     const data = req.body;
+        //     const result = await counsellingData.insertOne(data);
+        //     res.send(result);
+        // })
 
         // jwt token
 
