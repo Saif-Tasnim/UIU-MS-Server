@@ -65,6 +65,7 @@ async function run() {
         const enrollCollection = client.db("uiu_ms_database").collection("enroll");
         const counsellingCollection = client.db("uiu_ms_database").collection("counselling");
         const bookingCollection = client.db("uiu_ms_database").collection("booking");
+        const materialCollection = client.db("uiu_ms_database").collection("material");
 
         // const dummyCollection = client.db("uiu_ms_database").collection("dummyClass");
 
@@ -339,6 +340,14 @@ async function run() {
             const result = await facultyCollection.updateOne(query, updateDoc);
             res.send(result);
 
+        })
+
+        // materials api
+
+        app.post('/officeMaterials', verifyJWT, async (req, res) => {
+            const data = req.body;
+            const result = await materialCollection.insertOne(data);
+            res.send(result);
         })
 
         // dummy site link
